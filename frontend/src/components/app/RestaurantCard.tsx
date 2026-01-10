@@ -1,4 +1,4 @@
-import type { Restaurant } from "@/data/restaurants";
+import type { Restaurant } from "@/types";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 

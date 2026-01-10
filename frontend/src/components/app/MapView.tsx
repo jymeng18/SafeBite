@@ -1,151 +1,204 @@
-import type { Restaurant } from "@/data/restaurants";
-import { MapPin, ZoomIn, ZoomOut, Locate, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import type { Restaurant } from "@/types";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix for default marker icons in Leaflet with bundlers
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+// @ts-expect-error - Leaflet icon fix
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
+// Custom marker icons
+const createCustomIcon = (color: string) => {
+  return L.divIcon({
+    className: "custom-marker",
+    html: `
+      <div style="
+        background-color: ${color};
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+};
+
+const pickIcon = createCustomIcon("hsl(142, 72%, 45%)");
+const possibleIcon = createCustomIcon("hsl(217, 91%, 60%)");
+
+// User location icon
+const userIcon = L.divIcon({
+  className: "user-marker",
+  html: `
+    <div style="position: relative;">
+      <div style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        background-color: hsl(142, 72%, 45%, 0.3);
+        border-radius: 50%;
+        animation: pulse 2s ease-out infinite;
+      "></div>
+      <div style="
+        position: relative;
+        width: 20px;
+        height: 20px;
+        background-color: hsl(142, 72%, 45%);
+        border: 3px solid white;
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      "></div>
+    </div>
+    <style>
+      @keyframes pulse {
+        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+      }
+    </style>
+  `,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+});
 
 interface MapViewProps {
   restaurants: Restaurant[];
   selectedRestaurant: string | null;
   setSelectedRestaurant: (id: string | null) => void;
+  userLocation?: { lat: number; lng: number };
 }
+
+// Component to handle map interactions
+const MapController = ({
+  selectedRestaurant,
+  restaurants,
+  userLocation,
+}: {
+  selectedRestaurant: string | null;
+  restaurants: Restaurant[];
+  userLocation?: { lat: number; lng: number };
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (selectedRestaurant) {
+      const restaurant = restaurants.find((r) => r.id === selectedRestaurant);
+      if (restaurant) {
+        map.flyTo([restaurant.lat, restaurant.lng], 16, { duration: 0.5 });
+      }
+    }
+  }, [selectedRestaurant, restaurants, map]);
+
+  useEffect(() => {
+    if (userLocation) {
+      map.setView([userLocation.lat, userLocation.lng], 14);
+    }
+  }, [userLocation, map]);
+
+  return null;
+};
 
 const MapView = ({
   restaurants,
   selectedRestaurant,
   setSelectedRestaurant,
+  userLocation,
 }: MapViewProps) => {
-  // Mock map - in production, integrate with Mapbox or Google Maps
-  const centerLat = 36.158;
-  const centerLng = -86.78;
-
-  const getMarkerPosition = (restaurant: Restaurant) => {
-    // Convert lat/lng to percentage position (simplified)
-    const x = ((restaurant.lng - centerLng + 0.03) / 0.06) * 100;
-    const y = ((centerLat - restaurant.lat + 0.02) / 0.04) * 100;
-    return { x: Math.max(5, Math.min(95, x)), y: Math.max(5, Math.min(95, y)) };
-  };
+  // Default center (Nashville, TN) - will be overridden by user location
+  const defaultCenter: [number, number] = [
+    userLocation?.lat ?? 36.158,
+    userLocation?.lng ?? -86.78,
+  ];
 
   return (
-    <div className="relative h-full w-full bg-secondary">
-      {/* Map Controls */}
-      <div className="absolute right-4 top-4 z-10 flex flex-col gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 bg-card shadow-md"
-        >
-          <ZoomIn className="h-5 w-5" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 bg-card shadow-md"
-        >
-          <ZoomOut className="h-5 w-5" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 bg-card shadow-md"
-        >
-          <Locate className="h-5 w-5" />
-        </Button>
-      </div>
-
-      {/* Info Button */}
-      <div className="absolute left-4 top-4 z-10">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 bg-card shadow-md"
-        >
-          <Info className="h-5 w-5" />
-        </Button>
-      </div>
-
-      {/* Mock Map Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent via-secondary to-accent/80">
-        {/* Grid lines to simulate map */}
-        <div className="absolute inset-0 opacity-30">
-          {[...Array(10)].map((_, i) => (
-            <div
-              key={`h-${i}`}
-              className="absolute h-px w-full bg-muted-foreground/30"
-              style={{ top: `${i * 10 + 5}%` }}
-            />
-          ))}
-          {[...Array(10)].map((_, i) => (
-            <div
-              key={`v-${i}`}
-              className="absolute h-full w-px bg-muted-foreground/30"
-              style={{ left: `${i * 10 + 5}%` }}
-            />
-          ))}
-        </div>
-
-        {/* Road-like lines */}
-        <div className="absolute left-1/4 top-0 h-full w-1 bg-muted-foreground/20" />
-        <div className="absolute right-1/3 top-0 h-full w-0.5 bg-muted-foreground/20" />
-        <div className="absolute left-0 top-1/3 h-0.5 w-full bg-muted-foreground/20" />
-        <div className="absolute left-0 top-2/3 h-1 w-full bg-muted-foreground/20" />
-      </div>
-
-      {/* User Location Marker */}
-      <div
-        className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
-        style={{ left: "50%", top: "50%" }}
+    <div className="relative h-full w-full">
+      <MapContainer
+        center={defaultCenter}
+        zoom={14}
+        className="h-full w-full z-0"
+        zoomControl={true}
       >
-        <div className="relative">
-          <div className="absolute -inset-4 animate-ping rounded-full bg-primary/30" />
-          <div className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-primary-foreground bg-primary shadow-lg">
-            <div className="h-2 w-2 rounded-full bg-primary-foreground" />
-          </div>
-        </div>
-      </div>
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
 
-      {/* Restaurant Markers */}
-      {restaurants.map((restaurant) => {
-        const pos = getMarkerPosition(restaurant);
-        const isSelected = selectedRestaurant === restaurant.id;
+        <MapController
+          selectedRestaurant={selectedRestaurant}
+          restaurants={restaurants}
+          userLocation={userLocation}
+        />
 
-        return (
-          <div
+        {/* User Location Marker */}
+        {userLocation && (
+          <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+            <Popup>
+              <div className="text-center">
+                <p className="font-semibold">Your Location</p>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {/* Restaurant Markers */}
+        {restaurants.map((restaurant) => (
+          <Marker
             key={restaurant.id}
-            className="absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 hover:z-30 hover:scale-125"
-            style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-            onClick={() =>
-              setSelectedRestaurant(isSelected ? null : restaurant.id)
-            }
+            position={[restaurant.lat, restaurant.lng]}
+            icon={restaurant.rating === "pick" ? pickIcon : possibleIcon}
+            eventHandlers={{
+              click: () => {
+                setSelectedRestaurant(
+                  selectedRestaurant === restaurant.id ? null : restaurant.id
+                );
+              },
+            }}
           >
-            <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full shadow-lg transition-all ${
-                restaurant.rating === "pick" ? "bg-pick" : "bg-possible"
-              } ${isSelected ? "ring-4 ring-foreground/20 scale-125" : ""}`}
-            >
-              <MapPin className="h-4 w-4 text-primary-foreground" />
-            </div>
-
-            {/* Tooltip on hover/select */}
-            {isSelected && (
-              <div className="absolute left-1/2 top-full z-40 mt-2 w-48 -translate-x-1/2 rounded-lg border border-border bg-card p-3 shadow-xl">
-                <h4 className="font-display text-sm font-semibold text-foreground">
+            <Popup>
+              <div className="min-w-[200px]">
+                <h4 className="font-semibold text-foreground">
                   {restaurant.name}
                 </h4>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   {restaurant.cuisine}
                 </p>
-                <p className="mt-1 text-xs font-medium text-primary">
+                <p className="text-sm font-medium text-primary mt-1">
                   {restaurant.distance} miles away
                 </p>
+                {restaurant.matchingItems > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {restaurant.matchingItems} matching menu items
+                  </p>
+                )}
               </div>
-            )}
-          </div>
-        );
-      })}
-
-      {/* Map Attribution */}
-      <div className="absolute bottom-2 right-2 z-10 rounded bg-card/80 px-2 py-1 text-xs text-muted-foreground">
-        © SafeBite Maps
-      </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
     </div>
   );
 };

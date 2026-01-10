@@ -1,17 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import AppHeader from "@/components/app/AppHeader";
 import FiltersPanel from "@/components/app/FiltersPanel";
 import RestaurantList from "@/components/app/RestaurantList";
 import MapView from "@/components/app/MapView";
-import { mockRestaurants } from "@/data/restaurants";
 import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, Map, List, X } from "lucide-react";
+import { SlidersHorizontal, Map, List, X, Loader2 } from "lucide-react";
+import { useRestaurants } from "@/lib/queries";
+import { transformRestaurants } from "@/types";
 
 const AppPage = () => {
-  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([
-    "peanuts",
-    "dairy",
-  ]);
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [selectedDistance, setSelectedDistance] = useState(5);
   const [showPicks, setShowPicks] = useState(true);
   const [showPossibles, setShowPossibles] = useState(true);
@@ -21,11 +19,73 @@ const AppPage = () => {
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Filter restaurants
+  // User location state
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  // Get user's geolocation on mount
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser");
+      // Fallback to Nashville, TN
+      setUserLocation({ lat: 36.158, lng: -86.78 });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setLocationError("Unable to get your location. Using default location.");
+        // Fallback to Nashville, TN
+        setUserLocation({ lat: 36.158, lng: -86.78 });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000, // 5 minutes
+      }
+    );
+  }, []);
+
+  // Convert miles to meters for API (1 mile = 1609.34 meters)
+  const radiusInMeters = Math.min(selectedDistance * 1609, 5000); // API max is 5000m
+
+  // Fetch restaurants from API
+  const {
+    data: apiRestaurants,
+    isLoading,
+    isError,
+  } = useRestaurants(
+    {
+      lat: userLocation?.lat ?? 0,
+      lon: userLocation?.lng ?? 0,
+      radius: radiusInMeters,
+    },
+    !!userLocation // Only fetch when we have a location
+  );
+
+  // Transform and filter restaurants
   const filteredRestaurants = useMemo(() => {
-    return mockRestaurants
+    if (!apiRestaurants || !userLocation) return [];
+
+    // Transform API data to frontend format
+    const transformed = transformRestaurants(
+      apiRestaurants,
+      userLocation.lat,
+      userLocation.lng,
+      selectedAllergens
+    );
+
+    // Apply frontend filters
+    return transformed
       .filter((restaurant) => {
-        // Distance filter
+        // Distance filter (already filtered by API, but double-check)
         if (restaurant.distance > selectedDistance) return false;
 
         // Rating filter
@@ -35,7 +95,27 @@ const AppPage = () => {
         return true;
       })
       .sort((a, b) => a.distance - b.distance);
-  }, [selectedDistance, showPicks, showPossibles]);
+  }, [apiRestaurants, userLocation, selectedAllergens, selectedDistance, showPicks, showPossibles]);
+
+  // Loading state
+  if (!userLocation) {
+    return (
+      <div className="flex h-screen flex-col bg-background">
+        <AppHeader />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+            <p className="mt-4 text-lg text-muted-foreground">
+              Getting your location...
+            </p>
+            {locationError && (
+              <p className="mt-2 text-sm text-destructive">{locationError}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -90,6 +170,8 @@ const AppPage = () => {
             restaurants={filteredRestaurants}
             selectedRestaurant={selectedRestaurant}
             setSelectedRestaurant={setSelectedRestaurant}
+            isLoading={isLoading}
+            isError={isError}
           />
         </div>
 
@@ -99,6 +181,7 @@ const AppPage = () => {
             restaurants={filteredRestaurants}
             selectedRestaurant={selectedRestaurant}
             setSelectedRestaurant={setSelectedRestaurant}
+            userLocation={userLocation}
           />
         </div>
 
@@ -153,12 +236,15 @@ const AppPage = () => {
                 restaurants={filteredRestaurants}
                 selectedRestaurant={selectedRestaurant}
                 setSelectedRestaurant={setSelectedRestaurant}
+                isLoading={isLoading}
+                isError={isError}
               />
             ) : (
               <MapView
                 restaurants={filteredRestaurants}
                 selectedRestaurant={selectedRestaurant}
                 setSelectedRestaurant={setSelectedRestaurant}
+                userLocation={userLocation}
               />
             )}
           </div>

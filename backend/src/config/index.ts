@@ -1,21 +1,14 @@
 // config file for the api
-import dotenv from 'dotenv';
-
-dotenv.config();
-
 export const config = {
   port: parseInt(process.env.PORT || '3001', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   cache: {
-    ttl: parseInt(process.env.CACHE_TTL || '3600', 10),
+    ttl: 3600, // 1 hour
   },
-  // limit each rate 
   rateLimit: {
-    windowMs: parseInt(process.env. RATE_LIMIT_WINDOW_MS || '60000', 10),
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '20', 10),
+    windowMs: 60000, // 1 minute
+    maxRequests: 30,
   },
-  // api source
   api: {
     overpassUrl: 'https://overpass-api.de/api/interpreter',
     nominatimUrl: 'https://nominatim.openstreetmap.org',

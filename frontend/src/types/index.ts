@@ -1,0 +1,206 @@
+/**
+ * Shared types for SafeBite frontend
+ */
+
+// Backend Restaurant type (what the API returns)
+export interface ApiRestaurant {
+  id: number;
+  name: string;
+  lat: number;
+  lon: number;
+  cuisine: string | null;
+  address: {
+    street: string | null;
+    housenumber: string | null;
+    city: string | null;
+    postcode: string | null;
+  };
+  contact: {
+    phone: string | null;
+    website: string | null;
+    email: string | null;
+  };
+  opening_hours: string | null;
+  rating: number | null;
+  dietary_options: {
+    vegetarian: boolean;
+    vegan: boolean;
+    gluten_free: boolean;
+    halal: boolean;
+    kosher: boolean;
+  };
+}
+
+// Frontend Restaurant type (what components use)
+export interface Restaurant {
+  id: string;
+  name: string;
+  cuisine: string;
+  distance: number;
+  rating: "pick" | "possible";
+  isPartnered: boolean;
+  hasAllergyExcellence: boolean;
+  matchingItems: number;
+  description: string;
+  address: string;
+  lat: number;
+  lng: number;
+  // Additional fields from API
+  contact?: {
+    phone: string | null;
+    website: string | null;
+    email: string | null;
+  };
+  opening_hours?: string | null;
+  dietary_options?: {
+    vegetarian: boolean;
+    vegan: boolean;
+    gluten_free: boolean;
+    halal: boolean;
+    kosher: boolean;
+  };
+}
+
+// Allergen definition
+export interface Allergen {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+// Distance option
+export interface DistanceOption {
+  value: number;
+  label: string;
+}
+
+// Allergens list
+export const allergens: Allergen[] = [
+  { id: "peanuts", label: "Peanuts", icon: "🥜" },
+  { id: "tree-nuts", label: "Tree Nuts", icon: "🌰" },
+  { id: "dairy", label: "Dairy", icon: "🥛" },
+  { id: "eggs", label: "Eggs", icon: "🥚" },
+  { id: "wheat", label: "Wheat/Gluten", icon: "🌾" },
+  { id: "soy", label: "Soy", icon: "🫘" },
+  { id: "fish", label: "Fish", icon: "🐟" },
+  { id: "shellfish", label: "Shellfish", icon: "🦐" },
+  { id: "sesame", label: "Sesame", icon: "🌱" },
+];
+
+// Distance options
+export const distances: DistanceOption[] = [
+  { value: 1, label: "1 Mile" },
+  { value: 5, label: "5 Miles" },
+  { value: 25, label: "25 Miles" },
+  { value: 50, label: "50 Miles" },
+];
+
+/**
+ * Calculate distance between two coordinates using Haversine formula
+ * Returns distance in miles
+ */
+export function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c * 10) / 10; // Round to 1 decimal
+}
+
+/**
+ * Format address from API address object
+ */
+function formatAddress(address: ApiRestaurant["address"]): string {
+  const parts = [];
+  if (address.housenumber && address.street) {
+    parts.push(`${address.housenumber} ${address.street}`);
+  } else if (address.street) {
+    parts.push(address.street);
+  }
+  if (address.city) {
+    parts.push(address.city);
+  }
+  return parts.join(", ") || "Address not available";
+}
+
+/**
+ * Determine restaurant rating based on dietary options and user allergens
+ * "pick" = good match for user's dietary needs
+ * "possible" = might work but less certain
+ */
+function determineRating(
+  restaurant: ApiRestaurant,
+  userAllergens: string[]
+): "pick" | "possible" {
+  const dietary = restaurant.dietary_options;
+  
+  // If restaurant has good dietary info and supports gluten-free/vegan, it's likely safer
+  const hasDietarySupport = dietary.vegetarian || dietary.vegan || dietary.gluten_free;
+  
+  // Simple heuristic: restaurants with dietary options are more likely to be allergen-aware
+  if (hasDietarySupport && userAllergens.length > 0) {
+    return "pick";
+  }
+  
+  return "possible";
+}
+
+/**
+ * Transform API restaurant data to frontend format
+ */
+export function transformRestaurant(
+  apiRestaurant: ApiRestaurant,
+  userLat: number,
+  userLon: number,
+  userAllergens: string[] = []
+): Restaurant {
+  const distance = calculateDistance(
+    userLat,
+    userLon,
+    apiRestaurant.lat,
+    apiRestaurant.lon
+  );
+
+  return {
+    id: apiRestaurant.id.toString(),
+    name: apiRestaurant.name,
+    cuisine: apiRestaurant.cuisine || "Restaurant",
+    distance,
+    rating: determineRating(apiRestaurant, userAllergens),
+    isPartnered: false, // Could be determined by a partnered restaurants list
+    hasAllergyExcellence: apiRestaurant.dietary_options.gluten_free || apiRestaurant.dietary_options.vegan,
+    matchingItems: 0, // Would need menu data to calculate
+    description: `${apiRestaurant.name} is a ${apiRestaurant.cuisine || "restaurant"} located at ${formatAddress(apiRestaurant.address)}.${apiRestaurant.opening_hours ? ` Hours: ${apiRestaurant.opening_hours}` : ""}`,
+    address: formatAddress(apiRestaurant.address),
+    lat: apiRestaurant.lat,
+    lng: apiRestaurant.lon, // Note: API uses 'lon', frontend uses 'lng'
+    contact: apiRestaurant.contact,
+    opening_hours: apiRestaurant.opening_hours,
+    dietary_options: apiRestaurant.dietary_options,
+  };
+}
+
+/**
+ * Transform array of API restaurants to frontend format
+ */
+export function transformRestaurants(
+  apiRestaurants: ApiRestaurant[],
+  userLat: number,
+  userLon: number,
+  userAllergens: string[] = []
+): Restaurant[] {
+  return apiRestaurants.map((r) =>
+    transformRestaurant(r, userLat, userLon, userAllergens)
+  );
+}
