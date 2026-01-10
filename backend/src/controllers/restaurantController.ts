@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import restaurantService from '../services/restaurantService.js';
+import restaurantService from '../services/restaurantServices.js';
 import { ApiResponse, Restaurant } from '../types/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 
@@ -14,7 +14,7 @@ export class RestaurantController {
     const latitude = parseFloat(lat as string);
     const longitude = parseFloat(lon as string);
     const searchRadius = radius ? parseInt(radius as string, 10) : 1500;
-    const dietaryOptions = dietary ? (dietary as string).split(',') : undefined;
+    const dietaryOptions = dietary ?  (dietary as string).split(',') : undefined;
 
     if (isNaN(latitude) || isNaN(longitude)) {
       throw new AppError('Invalid latitude or longitude', 400);

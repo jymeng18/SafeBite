@@ -1,0 +1,18 @@
+/**
+ * Filename: main.tsx
+ *
+ * Desc: Main - groups together all comps
+ *
+ * Author: JM
+ */
+
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App.tsx";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import geocodeService from '../services/geocodeService.js';
+import geocodeService from '../services/geocodeServices.js';
 import { ApiResponse, GeocodingResult } from '../types/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 
