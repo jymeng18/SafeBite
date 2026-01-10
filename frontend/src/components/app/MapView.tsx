@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { Restaurant } from "@/data/restaurants";
+import type { Restaurant } from "@/types";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";

@@ -3,9 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 import { config } from './config/index.js';
 import routes from './routes/index.js';
@@ -25,10 +22,7 @@ class Server {
 
   private setupMiddleware(): void {
     this.app.use(helmet());
-    this.app.use(cors({
-      origin: config.corsOrigin,
-      credentials: true,
-    }));
+    this.app.use(cors());
     this.app.use(compression());
 
     if (config.nodeEnv === 'development') {
@@ -73,9 +67,8 @@ class Server {
 
   public start(): void {
     this.app.listen(config.port, () => {
-      Logger.info(` SafeBite server running on port ${config.port}`);
-      Logger.info(` Environment: ${config.nodeEnv}`);
-      Logger.info(` CORS enabled for: ${config. corsOrigin}`);
+      Logger.info(`SafeBite server running on port ${config.port}`);
+      Logger.info(`Environment: ${config.nodeEnv}`);
     });
   }
 }
