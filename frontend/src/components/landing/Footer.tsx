@@ -19,7 +19,7 @@ const Footer = () => {
             </Link>
             <p className="max-w-md text-muted-foreground">
               JourneyHacks 2026 project dedicated to raise awarenes for people that are heavily affected by their allergens. We hope this app improves your experience on eating out.
-              Project made by Jerry, Angad, Mike, (other name)
+              Project made by Jerry, Angad, Mike, Kenzie
             </p>
           </div>
 
