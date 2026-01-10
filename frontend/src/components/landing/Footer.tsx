@@ -6,7 +6,7 @@ const Footer = () => {
     <footer className="border-t border-border bg-card py-12">
       <div className="container mx-auto px-4">
         <div className="grid gap-8 md:grid-cols-4">
-            
+
           {/* Brand */}
           <div className="md:col-span-2">
             <Link to="/" className="mb-4 flex items-center gap-2">
@@ -18,9 +18,8 @@ const Footer = () => {
               </span>
             </Link>
             <p className="max-w-md text-muted-foreground">
-              Helping people with food allergies find safe, delicious dining
-              options since 2024. Because everyone deserves to eat out with
-              confidence.
+              JourneyHacks 2026 project dedicated to raise awarenes for people that are heavily affected by their allergens. We hope this app improves your experience on eating out.
+              Project made by Jerry, Angad, Mike, (other name)
             </p>
           </div>
 
@@ -77,7 +76,7 @@ const Footer = () => {
               </li>
               <li>
                 <a href="#" className="transition-colors hover:text-foreground">
-                  Contact
+                  Contact (Im joking vro please dont contact)
                 </a>
               </li>
             </ul>
