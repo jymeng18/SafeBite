@@ -1,4 +1,4 @@
-import { OverpassElement, Restaurant } from '../type/index.js';
+import { OverpassElement, Restaurant } from '../types/index.js';
 
 const PROBABILITIES = {
   vegetarian: 0.35,
