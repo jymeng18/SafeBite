@@ -37,9 +37,9 @@ export interface OverpassElement {
     amenity?: string;
     cuisine?:  string;
     phone?: string;
-    'contact: phone'?: string;
+    'contact:phone'?: string;
     website?: string;
-    'contact: website'?: string;
+    'contact:website'?: string;
     'contact:email'?: string;
     opening_hours?: string;
     'addr:street'?: string;
