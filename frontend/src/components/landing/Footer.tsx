@@ -6,7 +6,6 @@ const Footer = () => {
       <footer className="border-t border-border bg-card py-12">
         <div className="container mx-auto px-4">
           <div className="grid gap-8 md:grid-cols-4">
-            
             {/* Brand */}
             <div className="md:col-span-2">
               <Link to="/" className="mb-4 flex items-center gap-2">
@@ -24,9 +23,40 @@ const Footer = () => {
               </p>
             </div>
 
+            {/* Links */}
+            <div>
+              <h4 className="mb-4 font-display font-semibold text-foreground">
+                Product
+              </h4>
+              <ul className="space-y-2 text-muted-foreground">
+                <li>
+                  <a
+                    href="#features"
+                    className="transition-colors hover:text-foreground"
+                  >
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#how-it-works"
+                    className="transition-colors hover:text-foreground"
+                  >
+                    How It Works
+                  </a>
+                </li>
+                <li>
+                  <Link
+                    to="/app"
+                    className="transition-colors hover:text-foreground"
+                  >
+                    Find Restaurants
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-
-
+            
           </div>
         </div>
       </footer>
