@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import restaurantService from '../services/restaurantService.js';
-import { ApiResponse, Restaurant } from '../types/index.js';
+import restaurantService from '../services/restaurantServices.js';
+import { ApiResponse, Restaurant } from '../type/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 
 export class RestaurantController {
