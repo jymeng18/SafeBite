@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { config } from '../config/index.js';
-import { Restaurant, OverpassResponse, OverpassElement } from '../type/index.js';
+import { Restaurant, OverpassResponse, OverpassElement } from '../types/index.js';
 import cache from '../utils/cache.js';
 import { Logger } from '../utils/logger.js';
 

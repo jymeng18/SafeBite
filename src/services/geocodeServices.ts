@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { config } from '../config/index.js';
-import { GeocodingResult } from '../type/index.js';
+import { GeocodingResult } from '../types/index.js';
 import cache from '../utils/cache.js';
 import { Logger } from '../utils/logger.js';
 

@@ -10,8 +10,8 @@ const router = Router();
 router.get('/restaurants', asyncHandler(restaurantController.getRestaurants. bind(restaurantController)));
 
 // Geocoding routes
-router.get('/geocode', asyncHandler(geocodeController.searchLocation.bind(geocodeController)));
-router.get('/reverse-geocode', asyncHandler(geocodeController.reverseGeocode. bind(geocodeController)));
+router.get('/geocode', asyncHandler(geocodeController. searchLocation.bind(geocodeController)));
+router.get('/reverse-geocode', asyncHandler(geocodeController.reverseGeocode.bind(geocodeController)));
 
 // Health check
 router.get('/health', (req, res) => {
@@ -32,7 +32,7 @@ router.post('/cache/clear', (req, res) => {
   cache.flush();
   res.json({
     success: true,
-    message: 'Cache cleared successfully',
+    message:  'Cache cleared successfully',
   });
 });
 

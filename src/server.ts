@@ -1,82 +1,94 @@
-// This is the main backend server
-// Initializing typescript
-import express from "express";
-import type { Request, Response } from "express";
-import cors from "cors";
-import axios from "axios";
-import dotenv from "dotenv";
+import express, { Application } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
-const app = express();
-const PORT = Number(process.env.PORT || 3000);
-const USDA_KEY = process.env.USDA_API_KEY;
+import { config } from './config/index.js';
+import routes from './routes/index.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { rateLimiter } from './middleware/rateLimiter.js';
+import { Logger } from './utils/logger.js';
 
-if (!USDA_KEY) {
-  throw new Error("Missing USDA_API_KEY in .env");
+class Server {
+  private app: Application;
+
+  constructor() {
+    this.app = express();
+    this.setupMiddleware();
+    this.setupRoutes();
+    this.setupErrorHandling();
+  }
+
+  private setupMiddleware(): void {
+    this.app.use(helmet());
+    this.app.use(cors({
+      origin: config.corsOrigin,
+      credentials: true,
+    }));
+    this.app.use(compression());
+
+    if (config.nodeEnv === 'development') {
+      this.app.use(morgan('dev'));
+    }
+
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(rateLimiter);
+  }
+
+  private setupRoutes(): void {
+    this.app. use('/api', routes);
+
+    this.app.get('/', (req, res) => {
+      res.json({
+        success: true,
+        message: 'SafeBite API - Find restaurants matching your dietary needs',
+        version: '1.0.0',
+        endpoints: {
+          restaurants: '/api/restaurants? lat={lat}&lon={lon}&radius={radius}&dietary={dietary}',
+          geocode: '/api/geocode? query={location}',
+          reverseGeocode: '/api/reverse-geocode?lat={lat}&lon={lon}',
+          health: '/api/health',
+        },
+        dietary_options: ['vegetarian', 'vegan', 'gluten_free', 'halal', 'kosher'],
+      });
+    });
+
+    
+    this.app.use((req, res) => {
+      res.status(404).json({
+        success: false,
+        error: 'Route not found',
+      });
+    });
+  }
+
+  private setupErrorHandling(): void {
+    this.app.use(errorHandler);
+  }
+
+  public start(): void {
+    this.app.listen(config.port, () => {
+      Logger.info(` SafeBite server running on port ${config.port}`);
+      Logger.info(` Environment: ${config.nodeEnv}`);
+      Logger.info(` CORS enabled for: ${config. corsOrigin}`);
+    });
+  }
 }
 
-app.use(express.json());
+const server = new Server();
+server.start();
 
-// CORS so frontend can call your backend
-app.use(
-  cors({
-    origin: process.env.FRONTEND_ORIGIN || "*",
-    credentials: true,
-  })
-);
-
-const USDA_BASE = "https://api.nal.usda.gov/fdc/v1";
-
-// health
-app.get("/api/v1/health", (req: Request, res: Response) => {
-  res.json({ ok: true });
+process.on('unhandledRejection', (reason: Error) => {
+  Logger.error('Unhandled Rejection:', reason);
+  process.exit(1);
 });
 
-// 1) Search foods: /api/v1/usda/search?query=banana&pageSize=10&pageNumber=1
-app.get("/api/v1/usda/search", async (req: Request, res: Response) => {
-  try {
-    const query = String(req.query.query || "").trim();
-    const pageSize = Math.min(Math.max(Number(req.query.pageSize || 10), 1), 50);
-    const pageNumber = Math.max(Number(req.query.pageNumber || 1), 1);
-
-    if (!query) return res.status(400).json({ error: "Missing query param: query" });
-
-    const { data } = await axios.get(`${USDA_BASE}/foods/search`, {
-      params: { api_key: USDA_KEY, query, pageSize, pageNumber },
-      timeout: 10000,
-    });
-
-    res.json(data);
-  } catch (err: any) {
-    res.status(err?.response?.status || 500).json({
-      error: "USDA search failed",
-      details: err?.response?.data || err.message,
-    });
-  }
+process.on('uncaughtException', (error:  Error) => {
+  Logger.error('Uncaught Exception:', error);
+  process.exit(1);
 });
-
-// 2) Food details by ID: /api/v1/usda/food/1102653
-app.get("/api/v1/usda/food/:fdcId", async (req: Request, res: Response) => {
-  try {
-    const fdcId = Number(req.params.fdcId);
-    if (!Number.isFinite(fdcId)) return res.status(400).json({ error: "fdcId must be a number" });
-
-    const { data } = await axios.get(`${USDA_BASE}/food/${fdcId}`, {
-      params: { api_key: USDA_KEY },
-      timeout: 10000,
-    });
-
-    res.json(data);
-  } catch (err: any) {
-    res.status(err?.response?.status || 500).json({
-      error: "USDA details failed",
-      details: err?.response?.data || err.message,
-    });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
-
