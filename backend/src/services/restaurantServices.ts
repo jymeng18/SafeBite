@@ -3,7 +3,7 @@ import { config } from '../config/index.js';
 import { Restaurant, OverpassResponse, OverpassElement } from '../types/index.js';
 import cache from '../utils/cache.js';
 import { Logger } from '../utils/logger.js';
-import { createDietaryOptions } from '../utils/restaurantFactory.js';
+import { createDietaryOptions, createAllergensPresent } from '../utils/restaurantFactory.js';
 
 export class RestaurantService {
   private buildOverpassQuery(lat: number, lon: number, radius:  number, dietary?:  string[]): string {
@@ -55,6 +55,7 @@ export class RestaurantService {
       opening_hours:  tags.opening_hours || null,
       rating: null,
       dietary_options: this.processDietaryOptions(tags),
+      allergens_present: createAllergensPresent(),
     };
   }
 

@@ -2,6 +2,18 @@
  * Shared types for SafeBite frontend
  */
 
+// Allergen keys (must match backend)
+export type AllergenKey = 
+  | "peanuts"
+  | "tree_nuts"
+  | "dairy"
+  | "eggs"
+  | "wheat"
+  | "soy"
+  | "fish"
+  | "shellfish"
+  | "sesame";
+
 // Backend Restaurant type (what the API returns)
 export interface ApiRestaurant {
   id: number;
@@ -29,6 +41,7 @@ export interface ApiRestaurant {
     halal: boolean;
     kosher: boolean;
   };
+  allergens_present: Record<AllergenKey, boolean>;
 }
 
 // Frontend Restaurant type (what components use)
@@ -45,6 +58,8 @@ export interface Restaurant {
   address: string;
   lat: number;
   lng: number;
+  // Allergens present in this restaurant's food
+  allergens_present: Record<AllergenKey, boolean>;
   // Additional fields from API
   contact?: {
     phone: string | null;
@@ -63,7 +78,7 @@ export interface Restaurant {
 
 // Allergen definition
 export interface Allergen {
-  id: string;
+  id: AllergenKey;
   label: string;
   icon: string;
 }
@@ -74,10 +89,10 @@ export interface DistanceOption {
   label: string;
 }
 
-// Allergens list
+// Allergens list - IDs must match backend allergen keys exactly
 export const allergens: Allergen[] = [
   { id: "peanuts", label: "Peanuts", icon: "🥜" },
-  { id: "tree-nuts", label: "Tree Nuts", icon: "🌰" },
+  { id: "tree_nuts", label: "Tree Nuts", icon: "🌰" },
   { id: "dairy", label: "Dairy", icon: "🥛" },
   { id: "eggs", label: "Eggs", icon: "🥚" },
   { id: "wheat", label: "Wheat/Gluten", icon: "🌾" },
@@ -135,25 +150,40 @@ function formatAddress(address: ApiRestaurant["address"]): string {
 }
 
 /**
- * Determine restaurant rating based on dietary options and user allergens
- * "pick" = good match for user's dietary needs
- * "possible" = might work but less certain
+ * Determine restaurant rating based on user's allergens
+ * "pick" = restaurant does NOT contain any of the user's allergens (safe!)
+ * "possible" = restaurant contains at least one of the user's allergens
  */
 function determineRating(
   restaurant: ApiRestaurant,
-  userAllergens: string[]
+  userAllergens: AllergenKey[]
 ): "pick" | "possible" {
-  const dietary = restaurant.dietary_options;
-  
-  // If restaurant has good dietary info and supports gluten-free/vegan, it's likely safer
-  const hasDietarySupport = dietary.vegetarian || dietary.vegan || dietary.gluten_free;
-  
-  // Simple heuristic: restaurants with dietary options are more likely to be allergen-aware
-  if (hasDietarySupport && userAllergens.length > 0) {
+  // If user has no allergens selected, all restaurants are picks
+  if (userAllergens.length === 0) {
     return "pick";
   }
-  
-  return "possible";
+
+  // Check if the restaurant contains ANY of the user's allergens
+  const containsUserAllergen = userAllergens.some(
+    (allergen) => restaurant.allergens_present[allergen] === true
+  );
+
+  // If restaurant does NOT contain user's allergens, it's a "pick"
+  // If it does contain allergens, it's "possible" (might still have safe options)
+  return containsUserAllergen ? "possible" : "pick";
+}
+
+/**
+ * Count how many of user's allergens are NOT present (safe items)
+ */
+function countSafeAllergens(
+  restaurant: ApiRestaurant,
+  userAllergens: AllergenKey[]
+): number {
+  if (userAllergens.length === 0) return 0;
+  return userAllergens.filter(
+    (allergen) => restaurant.allergens_present[allergen] === false
+  ).length;
 }
 
 /**
@@ -163,7 +193,7 @@ export function transformRestaurant(
   apiRestaurant: ApiRestaurant,
   userLat: number,
   userLon: number,
-  userAllergens: string[] = []
+  userAllergens: AllergenKey[] = []
 ): Restaurant {
   const distance = calculateDistance(
     userLat,
@@ -171,6 +201,8 @@ export function transformRestaurant(
     apiRestaurant.lat,
     apiRestaurant.lon
   );
+
+  const safeCount = countSafeAllergens(apiRestaurant, userAllergens);
 
   return {
     id: apiRestaurant.id.toString(),
@@ -180,11 +212,12 @@ export function transformRestaurant(
     rating: determineRating(apiRestaurant, userAllergens),
     isPartnered: false, // Could be determined by a partnered restaurants list
     hasAllergyExcellence: apiRestaurant.dietary_options.gluten_free || apiRestaurant.dietary_options.vegan,
-    matchingItems: 0, // Would need menu data to calculate
+    matchingItems: safeCount, // Now represents allergens that are safe
     description: `${apiRestaurant.name} is a ${apiRestaurant.cuisine || "restaurant"} located at ${formatAddress(apiRestaurant.address)}.${apiRestaurant.opening_hours ? ` Hours: ${apiRestaurant.opening_hours}` : ""}`,
     address: formatAddress(apiRestaurant.address),
     lat: apiRestaurant.lat,
     lng: apiRestaurant.lon, // Note: API uses 'lon', frontend uses 'lng'
+    allergens_present: apiRestaurant.allergens_present,
     contact: apiRestaurant.contact,
     opening_hours: apiRestaurant.opening_hours,
     dietary_options: apiRestaurant.dietary_options,
@@ -198,7 +231,7 @@ export function transformRestaurants(
   apiRestaurants: ApiRestaurant[],
   userLat: number,
   userLon: number,
-  userAllergens: string[] = []
+  userAllergens: AllergenKey[] = []
 ): Restaurant[] {
   return apiRestaurants.map((r) =>
     transformRestaurant(r, userLat, userLon, userAllergens)
