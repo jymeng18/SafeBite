@@ -10,7 +10,7 @@ import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppHeader from './components/app/AppHeader';
-
+import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
 
@@ -20,7 +20,7 @@ const App = () => (
       <Routes>
         <Route path="/" element={<AppHeader />} />
         <Route path="/app" element={<h1>hello</h1>} />
-        <Route path="*" element={<h1>Hiii</h1>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   </QueryClientProvider>
