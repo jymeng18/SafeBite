@@ -21,6 +21,9 @@ const AppPage = () => {
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // User location - default to Nashville, TN (will be replaced with real geolocation)
+  const [userLocation] = useState({ lat: 36.158, lng: -86.78 });
+
   // Filter restaurants
   const filteredRestaurants = useMemo(() => {
     return mockRestaurants
@@ -99,6 +102,7 @@ const AppPage = () => {
             restaurants={filteredRestaurants}
             selectedRestaurant={selectedRestaurant}
             setSelectedRestaurant={setSelectedRestaurant}
+            userLocation={userLocation}
           />
         </div>
 
@@ -159,6 +163,7 @@ const AppPage = () => {
                 restaurants={filteredRestaurants}
                 selectedRestaurant={selectedRestaurant}
                 setSelectedRestaurant={setSelectedRestaurant}
+                userLocation={userLocation}
               />
             )}
           </div>
