@@ -6,6 +6,7 @@ const Footer = () => {
     <footer className="border-t border-border bg-card py-12">
       <div className="container mx-auto px-4">
         <div className="grid gap-8 md:grid-cols-4">
+            
           {/* Brand */}
           <div className="md:col-span-2">
             <Link to="/" className="mb-4 flex items-center gap-2">
@@ -82,6 +83,21 @@ const Footer = () => {
             </ul>
           </div>
         </div>
+
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 md:flex-row">
+          <p className="text-sm text-muted-foreground">
+            © 2026 SafeBite. All rights reserved.
+          </p>
+          <div className="flex gap-6 text-sm text-muted-foreground">
+            <a href="#" className="transition-colors hover:text-foreground">
+              Privacy Policy
+            </a>
+            <a href="#" className="transition-colors hover:text-foreground">
+              Terms of Service
+            </a>
+          </div>
+        </div>
+
       </div>
     </footer>
   );
