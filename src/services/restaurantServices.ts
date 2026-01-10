@@ -3,6 +3,7 @@ import { config } from '../config/index.js';
 import { Restaurant, OverpassResponse, OverpassElement } from '../type/index.js';
 import cache from '../utils/cache.js';
 import { Logger } from '../utils/logger.js';
+import { createDietaryOptions } from '../utils/restaurantFactory.js';
 
 export class RestaurantService {
   private buildOverpassQuery(lat: number, lon: number, radius:  number, dietary?:  string[]): string {
@@ -23,16 +24,8 @@ export class RestaurantService {
     return query;
   }
 
-  private processDietaryOptions(tags: OverpassElement['tags']) {
-    if (!tags) return {};
-
-    return {
-      vegetarian: tags['diet:vegetarian'] === 'yes',
-      vegan: tags['diet:vegan'] === 'yes',
-      gluten_free: tags['diet:gluten_free'] === 'yes',
-      halal: tags['diet:halal'] === 'yes',
-      kosher: tags['diet:kosher'] === 'yes',
-    };
+  private processDietaryOptions(tags: OverpassElement['tags']): Restaurant['dietary_options'] {
+    return createDietaryOptions(tags);
   }
 
   private processOverpassElement(element: OverpassElement): Restaurant | null {

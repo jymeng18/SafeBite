@@ -18,12 +18,12 @@ export interface Restaurant {
   };
   opening_hours: string | null;
   rating: number | null;
-  dietary_options?:  {
-    vegetarian?:  boolean;
-    vegan?: boolean;
-    gluten_free?:  boolean;
-    halal?: boolean;
-    kosher?: boolean;
+  dietary_options: {
+    vegetarian: boolean;
+    vegan: boolean;
+    gluten_free: boolean;
+    halal: boolean;
+    kosher: boolean;
   };
 }
 
