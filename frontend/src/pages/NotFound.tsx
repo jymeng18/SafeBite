@@ -3,7 +3,7 @@
  *
  * Desc: Err handling for nonexistent routes
  *
- * Author: JM
+ * Author: Jerry Meng
  */
 
 import { useLocation } from "react-router-dom";
