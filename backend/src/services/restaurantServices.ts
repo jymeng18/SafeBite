@@ -102,6 +102,9 @@ export class RestaurantService {
         });
       }
 
+      // Limit to 20 restaurants to improve performance
+      restaurants = restaurants.slice(0, 20);
+
       cache.set(cacheKey, restaurants);
       Logger.info(`Found ${restaurants.length} restaurants`);
 
