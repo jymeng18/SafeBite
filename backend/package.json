@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build",
+    "test:dietary": "ts-node --esm src/scripts/testDietaryOptions.ts"
   },
   "dependencies": {
     "axios": "^1.13.2",

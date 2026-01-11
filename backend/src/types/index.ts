@@ -25,6 +25,18 @@ export interface Restaurant {
     halal: boolean;
     kosher: boolean;
   };
+  // Allergens that MAY be present in the restaurant's food
+  allergens_present: {
+    peanuts: boolean;
+    tree_nuts: boolean;
+    dairy: boolean;
+    eggs: boolean;
+    wheat: boolean;
+    soy: boolean;
+    fish: boolean;
+    shellfish: boolean;
+    sesame: boolean;
+  };
 }
 
 export interface OverpassElement {

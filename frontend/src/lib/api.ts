@@ -32,6 +32,17 @@ export interface Restaurant {
     halal: boolean;
     kosher: boolean;
   };
+  allergens_present: {
+    peanuts: boolean;
+    tree_nuts: boolean;
+    dairy: boolean;
+    eggs: boolean;
+    wheat: boolean;
+    soy: boolean;
+    fish: boolean;
+    shellfish: boolean;
+    sesame: boolean;
+  };
 }
 
 export interface GeocodingResult {

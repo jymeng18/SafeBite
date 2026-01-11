@@ -6,10 +6,10 @@ import MapView from "@/components/app/MapView";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, Map, List, X, Loader2 } from "lucide-react";
 import { useRestaurants } from "@/lib/queries";
-import { transformRestaurants } from "@/types";
+import { transformRestaurants, type AllergenKey } from "@/types";
 
 const AppPage = () => {
-  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
+  const [selectedAllergens, setSelectedAllergens] = useState<AllergenKey[]>([]);
   const [selectedDistance, setSelectedDistance] = useState(5);
   const [showPicks, setShowPicks] = useState(true);
   const [showPossibles, setShowPossibles] = useState(true);
