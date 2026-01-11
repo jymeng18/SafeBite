@@ -45,9 +45,6 @@ const Header = () => {
 
             {/* CTA Buttons */}
             <div className="hidden items-center gap-3 md:flex">
-              <Button variant="ghost" size="sm">
-                Log In
-              </Button>
               <Link to="/app">
                 <Button variant="hero" size="sm">
                   Get Started
@@ -90,9 +87,6 @@ const Header = () => {
                 About
               </a>
               <div className="flex flex-col gap-2 pt-2">
-                <Button variant="ghost" size="sm">
-                  Log In
-                </Button>
                 <Link to="/app">
                   <Button variant="hero" size="sm" className="w-full">
                     Get Started

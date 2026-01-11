@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { ShieldCheck, Menu, X, Search } from "lucide-react";
 import { useState } from "react";
 
@@ -33,13 +32,6 @@ const AppHeader = () => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" className="hidden md:flex">
-            Log In
-          </Button>
-          <Button variant="default" size="sm">
-            Sign Up
-          </Button>
-
           {/* Mobile Menu Toggle */}
           <button
             className="md:hidden"
