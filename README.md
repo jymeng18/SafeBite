@@ -84,17 +84,6 @@ SafeBite provides a comprehensive platform where users can:
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Real-Time Search**: Live restaurant data from OpenStreetMap
 
-## Team
-
-<p align="left" id="team">
-  <b>Jerry</b> · Frontend Development & UI/UX<br/>
-  <b>Angad</b> · Backend Development & API Integration<br/>
-  <b>Mike</b> · Map Integration & Data Processing<br/>
-  <b>Kenzie</b> · System Architecture & Testing
-</p>
-
----
-
 <p align="center">
   <sub>Built with care for the food allergy community during JourneyHacks 2026</sub>
 </p>
